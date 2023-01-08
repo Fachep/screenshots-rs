@@ -40,15 +40,13 @@ impl Screen {
     Some(Screen::new(&display_info))
   }
 
-  pub fn capture(&self) -> Option<Image> {
-    capture_screen(&self.display_info)
-  }
-
   /**
    * 截取指定区域
    * 区域x,y为相对于当前屏幕的x,y坐标
+   *
+   * 布尔值表示是否是RGBA buffer，否则是RGBA buffer
    */
-  pub fn capture_area(&self, x: i32, y: i32, width: u32, height: u32) -> Option<Image> {
+  pub fn capture_area(&self, x: i32, y: i32, width: u32, height: u32) -> Option<(Vec<u8>, bool)> {
     let display_info = self.display_info;
     let screen_x2 = display_info.x + display_info.width as i32;
     let screen_y2 = display_info.y + display_info.height as i32;

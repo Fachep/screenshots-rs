@@ -1,4 +1,4 @@
-use crate::{DisplayInfo, Image};
+use crate::DisplayInfo;
 use sfhash::digest;
 use std::{mem, ops::Deref, ptr};
 use widestring::U16CString;
@@ -90,7 +90,7 @@ extern "system" fn monitor_enum_proc(
   }
 }
 
-fn capture(display_id: u32, x: i32, y: i32, width: i32, height: i32) -> Option<Image> {
+fn capture(display_id: u32, x: i32, y: i32, width: i32, height: i32) -> Option<(Vec<u8>, bool)> {
   let monitor_info_exw = get_monitor_info_exw_from_id(display_id)?;
 
   let sz_device = monitor_info_exw.szDevice;
@@ -200,19 +200,7 @@ fn capture(display_id: u32, x: i32, y: i32, width: i32, height: i32) -> Option<I
 
   chunks.reverse();
 
-  Image::from_bgra(
-    bitmap.bmWidth as u32,
-    bitmap.bmHeight as u32,
-    chunks.concat(),
-  )
-  .ok()
-}
-
-pub fn capture_screen(display_info: &DisplayInfo) -> Option<Image> {
-  let width = ((display_info.width as f32) * display_info.scale_factor) as i32;
-  let height = ((display_info.height as f32) * display_info.scale_factor) as i32;
-
-  capture(display_info.id, 0, 0, width, height)
+  Some((chunks.concat(), true))
 }
 
 pub fn capture_screen_area(
@@ -221,7 +209,7 @@ pub fn capture_screen_area(
   y: i32,
   width: u32,
   height: u32,
-) -> Option<Image> {
+) -> Option<(Vec<u8>, bool)> {
   let area_x = ((x as f32) * display_info.scale_factor) as i32;
   let area_y = ((y as f32) * display_info.scale_factor) as i32;
   let area_width = ((width as f32) * display_info.scale_factor) as i32;
