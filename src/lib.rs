@@ -44,7 +44,7 @@ impl Screen {
    * 截取指定区域
    * 区域x,y为相对于当前屏幕的x,y坐标
    *
-   * 布尔值表示是否是RGBA buffer，否则是RGBA buffer
+   * 布尔值表示是否是BGRA buffer，否则是RGBA buffer
    */
   pub fn capture_area(&self, x: i32, y: i32, width: u32, height: u32) -> Option<(Vec<u8>, bool)> {
     let display_info = self.display_info;

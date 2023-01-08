@@ -1,6 +1,6 @@
 use crate::{linux::wayland_screenshot::wayland_screenshot, DisplayInfo};
 
-/// modified to return a rgba buffer, not a PNG
+/// modified to return a bgra buffer, not a PNG
 pub fn wayland_capture_screen_area(
   display_info: &DisplayInfo,
   x: i32,
@@ -14,5 +14,5 @@ pub fn wayland_capture_screen_area(
   let area_height = (height as f32) * display_info.scale_factor;
 
   let buffer = wayland_screenshot(area_x, area_y, area_width as i32, area_height as i32)?;
-  Some((buffer, false))
+  Some((buffer, true))
 }

@@ -194,20 +194,20 @@ fn org_freedesktop_portal_screenshot(
 
   fs::remove_file(path)?;
 
-  let mut rgba = vec![0; (width * height * 4) as usize];
+  let mut bgra = vec![0; (width * height * 4) as usize];
   // 图片裁剪
   for r in y..(y + height) {
     for c in x..(x + width) {
       let index = (((r - y) * width + (c - x)) * 4) as usize;
       let i = ((r * info.width as i32 + c) * 4) as usize;
-      rgba[index] = bytes[i];
-      rgba[index + 1] = bytes[i + 1];
-      rgba[index + 2] = bytes[i + 2];
-      rgba[index + 3] = bytes[i + 3];
+      bgra[index] = bytes[i +2];
+      bgra[index + 1] = bytes[i + 1];
+      bgra[index + 2] = bytes[i];
+      bgra[index + 3] = bytes[i + 3];
     }
   }
 
-  return Ok(rgba);
+  return Ok(bgra);
 }
 
 // TODO: 失败后尝试删除文件
