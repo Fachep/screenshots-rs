@@ -13,6 +13,6 @@ pub fn wayland_capture_screen_area(
   let area_width = (width as f32) * display_info.scale_factor;
   let area_height = (height as f32) * display_info.scale_factor;
 
-  let buffer = wayland_screenshot(area_x, area_y, area_width as i32, area_height as i32)?;
-  Some((buffer, true))
+  let result = wayland_screenshot(area_x, area_y, area_width as i32, area_height as i32)?;
+  Some(result)
 }

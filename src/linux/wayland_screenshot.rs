@@ -72,7 +72,7 @@ fn org_gnome_shell_screenshot(
   y: i32,
   width: i32,
   height: i32,
-) -> Result<Vec<u8>, Box<dyn Error>> {
+) -> Result<(Vec<u8>, bool), Box<dyn Error>> {
   let proxy = conn.with_proxy(
     "org.gnome.Shell.Screenshot",
     "/org/gnome/Shell/Screenshot",
@@ -96,10 +96,14 @@ fn org_gnome_shell_screenshot(
     (x, y, width, height, false, &filename),
   )?;
 
-  let buffer = fs::read(&filename)?;
+  let decoder = Decoder::new(File::open(&filename)?);
+  let mut reader = decoder.read_info()?;
+  let mut buf = Vec::with_capacity(reader.output_buffer_size());
+  reader.next_frame(&mut buf)?;
+
   fs::remove_file(&filename)?;
 
-  Ok(buffer)
+  Ok((buf, false))
 }
 
 fn org_freedesktop_portal_screenshot(
@@ -108,7 +112,7 @@ fn org_freedesktop_portal_screenshot(
   y: i32,
   width: i32,
   height: i32,
-) -> Result<Vec<u8>, Box<dyn Error>> {
+) -> Result<(Vec<u8>, bool), Box<dyn Error>> {
   let status: Arc<Mutex<Option<u32>>> = Arc::new(Mutex::new(None));
   let status_res = status.clone();
   let path: Arc<Mutex<String>> = Arc::new(Mutex::new(String::new()));
@@ -185,35 +189,30 @@ fn org_freedesktop_portal_screenshot(
   let decoder = Decoder::new(File::open(path)?);
 
   let mut reader = decoder.read_info()?;
-  // Allocate the output buffer.
-  let mut buf = vec![0; reader.output_buffer_size()];
-  // Read the next frame. An APNG might contain multiple frames.
+  let mut buf = Vec::with_capacity(reader.output_buffer_size());
   let info = reader.next_frame(&mut buf)?;
-  // Grab the bytes of the image.
   let bytes = &buf[..info.buffer_size()];
 
   fs::remove_file(path)?;
 
-  let mut bgra = vec![0; (width * height * 4) as usize];
-  // 图片裁剪
+  let mut bgra = Vec::with_capacity((width * height * 4) as usize);
+
   for r in y..(y + height) {
     for c in x..(x + width) {
-      let index = (((r - y) * width + (c - x)) * 4) as usize;
       let i = ((r * info.width as i32 + c) * 4) as usize;
-      bgra[index] = bytes[i +2];
-      bgra[index + 1] = bytes[i + 1];
-      bgra[index + 2] = bytes[i];
-      bgra[index + 3] = bytes[i + 3];
+      bgra.push(bytes[i + 2]);
+      bgra.push(bytes[i + 1]);
+      bgra.push(bytes[i]);
+      bgra.push(bytes[i + 3]);
     }
   }
 
-  return Ok(bgra);
+  return Ok((bgra, true));
 }
 
 // TODO: 失败后尝试删除文件
-pub fn wayland_screenshot(x: i32, y: i32, width: i32, height: i32) -> Option<Vec<u8>> {
+pub fn wayland_screenshot(x: i32, y: i32, width: i32, height: i32) -> Option<(Vec<u8>, bool)> {
   let conn = Connection::new_session().ok()?;
-
   org_gnome_shell_screenshot(&conn, x, y, width, height)
     .or_else(|_| org_freedesktop_portal_screenshot(&conn, x, y, width, height))
     .ok()
