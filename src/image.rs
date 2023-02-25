@@ -1,61 +1,61 @@
 use png::{BitDepth, ColorType, Encoder, EncodingError};
 
 pub struct Image {
-  width: u32,
-  height: u32,
-  buffer: Vec<u8>,
+    width: u32,
+    height: u32,
+    buffer: Vec<u8>,
 }
 
 impl Image {
-  pub fn new(width: u32, height: u32, buffer: Vec<u8>) -> Self {
-    Image {
-      width,
-      height,
-      buffer,
-    }
-  }
-
-  pub fn from_bgra(width: u32, height: u32, bgra: Vec<u8>) -> Result<Self, EncodingError> {
-    let mut buffer = Vec::new();
-    let mut bytes = bgra;
-
-    // BGRA 转换为 RGBA
-    for i in (0..bytes.len()).step_by(4) {
-      let b = bytes[i];
-      let r = bytes[i + 2];
-
-      bytes[i] = r;
-      bytes[i + 2] = b;
-      bytes[i + 3] = 255;
+    pub fn new(width: u32, height: u32, buffer: Vec<u8>) -> Self {
+        Image {
+            width,
+            height,
+            buffer,
+        }
     }
 
-    let mut encoder = Encoder::new(&mut buffer, width, height);
+    pub fn from_bgra(width: u32, height: u32, bgra: Vec<u8>) -> Result<Self, EncodingError> {
+        let mut buffer = Vec::new();
+        let mut bytes = bgra;
 
-    encoder.set_color(ColorType::Rgba);
-    encoder.set_depth(BitDepth::Eight);
+        // BGRA 转换为 RGBA
+        for i in (0..bytes.len()).step_by(4) {
+            let b = bytes[i];
+            let r = bytes[i + 2];
 
-    let mut writer = encoder.write_header()?;
-    writer.write_image_data(&bytes)?;
-    writer.finish()?;
+            bytes[i] = r;
+            bytes[i + 2] = b;
+            bytes[i + 3] = 255;
+        }
 
-    Ok(Image::new(width, height, buffer))
-  }
+        let mut encoder = Encoder::new(&mut buffer, width, height);
 
-  pub fn width(&self) -> u32 {
-    self.width
-  }
+        encoder.set_color(ColorType::Rgba);
+        encoder.set_depth(BitDepth::Eight);
 
-  pub fn height(&self) -> u32 {
-    self.height
-  }
+        let mut writer = encoder.write_header()?;
+        writer.write_image_data(&bytes)?;
+        writer.finish()?;
 
-  pub fn buffer(&self) -> &Vec<u8> {
-    &self.buffer
-  }
+        Ok(Image::new(width, height, buffer))
+    }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub fn buffer(&self) -> &Vec<u8> {
+        &self.buffer
+    }
 }
 
 impl Into<Vec<u8>> for Image {
-  fn into(self) -> Vec<u8> {
-      self.buffer
-  }
+    fn into(self) -> Vec<u8> {
+        self.buffer
+    }
 }
