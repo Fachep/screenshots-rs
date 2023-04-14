@@ -19,7 +19,7 @@ pub fn capture_screen_area(
     y: i32,
     width: u32,
     height: u32,
-) -> Option<Image> {
+) -> Option<(Vec<u8>, bool)> {
     let cg_display = CGDisplay::new(display_info.id);
     let cg_image = cg_display.image()?;
 
@@ -42,5 +42,5 @@ pub fn capture_screen_area(
         }
     }
 
-    Image::from_bgra(w as u32, h as u32, bgra).ok()
+    Some((bgra, false))
 }
